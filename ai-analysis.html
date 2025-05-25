@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能分析 - 工业缺陷检测系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #1a2c56;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .card-header {
+            background-color: #f1f5f9;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+        .sidebar {
+            background-color: #343a40;
+            min-height: 100vh;
+            position: sticky;
+            top: 0;
+            padding-top: 20px;
+            color: #fff;
+        }
+        .sidebar-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px 0;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        .sidebar-item:hover {
+            background-color: #495057;
+        }
+        .sidebar-item.active {
+            background-color: #0d6efd;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            padding: 50px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-area:hover {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #6c757d;
+        }
+        .upload-preview {
+            display: none;
+            margin-bottom: 20px;
+        }
+        .upload-preview img {
+            max-height: 300px;
+            max-width: 100%;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid #0d6efd;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .badge-custom {
+            font-weight: normal;
+            padding: 5px 10px;
+        }
+        /* 新增：分析结果样式 */
+        .analysis-formatted {
+            border-radius: 6px;
+            background-color: #f8f9fa;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 15px !important;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .analysis-section {
+            border-left: 3px solid #0d6efd;
+            padding-left: 12px;
+            margin-bottom: 15px;
+        }
+        .analysis-title {
+            color: #0d6efd;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            background-color: rgba(13, 110, 253, 0.05);
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        .analysis-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #495057;
+        }
+        .analysis-content li {
+            margin-bottom: 6px;
+        }
+        .analysis-general {
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+        /* 针对不同类型标题的颜色变化 */
+        .analysis-section:nth-child(1) {
+            border-color: #dc3545;
+        }
+        .analysis-section:nth-child(1) .analysis-title {
+            color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.05);
+        }
+        .analysis-section:nth-child(2) {
+            border-color: #fd7e14;
+        }
+        .analysis-section:nth-child(2) .analysis-title {
+            color: #fd7e14;
+            background-color: rgba(253, 126, 20, 0.05);
+        }
+        .analysis-section:nth-child(3) {
+            border-color: #198754;
+        }
+        .analysis-section:nth-child(3) .analysis-title {
+            color: #198754;
+            background-color: rgba(25, 135, 84, 0.05);
+        }
+        .analysis-section:nth-child(4) {
+            border-color: #0dcaf0;
+        }
+        .analysis-section:nth-child(4) .analysis-title {
+            color: #0dcaf0;
+            background-color: rgba(13, 202, 240, 0.05);
+        }
+        /* 分析历史预览样式 */
+        .analysis-preview {
+            max-height: 100px;
+            overflow: hidden;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            color: #0d6efd;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+        
+        .preview-content {
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* 弹窗样式优化 */
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        /* 强调重要信息 */
+        .highlight-text {
+            font-weight: bold;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-eye"></i> 工业产品缺陷检测系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house-door"></i> 首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/ai-analysis.html">
+                            <i class="bi bi-robot"></i> AI分析
+                        </a>
+                    </li>
+                    <li class="nav-item" id="adminMenu" style="display: none;">
+                        <a class="nav-link" href="/admin.html">
+                            <i class="bi bi-gear"></i> 管理控制台
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> <span id="username">用户</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                            <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person"></i> 个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="sidebar-item active" data-target="analyze-new">
+                    <i class="bi bi-plus-circle"></i> 新建分析
+                </div>
+                <div class="sidebar-item" data-target="analysis-history">
+                    <i class="bi bi-clock-history"></i> 历史记录
+                </div>
+                <hr>
+                <div class="sidebar-item" onclick="window.location.href='/'">
+                    <i class="bi bi-arrow-left"></i> 返回检测面板
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- 新建分析 -->
+                <div id="analyze-new" class="content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2><i class="bi bi-robot"></i> DeepSeek AI 智能分析</h2>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-upload"></i> 上传图像进行分析
+                                </div>
+                                <div class="card-body">
+                                    <div class="upload-area" id="uploadArea">
+                                        <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                                        <h5>点击或拖拽图片到此处</h5>
+                                        <p class="text-muted">支持 JPG, PNG 格式</p>
+                                        <input type="file" id="imageUpload" accept="image/jpeg,image/png" style="display: none;">
+                                    </div>
+                                    <div id="uploadPreview" style="display: none;">
+                                        <img id="previewImage" class="img-fluid mb-3" style="max-height: 300px; border-radius: 5px;">
+                                        <div class="d-flex justify-content-between">
+                                            <button class="btn btn-sm btn-outline-secondary" id="changeImageBtn">
+                                                <i class="bi bi-arrow-repeat"></i> 更换图片
+                                            </button>
+                                            <button class="btn btn-sm btn-primary" id="analyzeImageBtn">
+                                                <i class="bi bi-robot"></i> 开始分析
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <i class="bi bi-list-check"></i> 从检测记录中选择
+                                </div>
+                                <div class="card-body">
+                                    <div id="detectionsLoader" class="loader"></div>
+                                    <div id="detectionsList" style="display: none;">
+                                        <!-- 动态加载检测记录 -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-file-text"></i> 分析结果
+                                </div>
+                                <div class="card-body">
+                                    <div id="analysisLoader" class="loader" style="display: none;"></div>
+                                    <div id="analysisResult" class="analysis-result">
+                                        <div class="text-center text-muted py-5">
+                                            <i class="bi bi-emoji-smile" style="font-size: 48px;"></i>
+                                            <p class="mt-3">在左侧上传图片或选择检测记录进行智能分析</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 历史记录 -->
+                <div id="analysis-history" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2><i class="bi bi-clock-history"></i> 分析历史记录</h2>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div id="historyLoader" class="loader"></div>
+                            <div id="historyList" style="display: none;">
+                                <!-- 动态加载历史记录 -->
+                            </div>
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center" id="historyPagination">
+                                    <!-- 动态加载分页 -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 分析详情弹窗 -->
+    <div class="modal fade" id="analysisDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-robot"></i> AI分析详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <img id="modalImage" src="" alt="分析图像" class="img-fluid rounded mb-2" style="max-height: 250px;">
+                                <p class="text-muted"><small>分析时间: <span id="modalTimestamp"></span></small></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="bi bi-graph-up"></i> 分析概要
+                                </div>
+                                <div class="card-body p-2" id="analysisSummary">
+                                    <!-- 将在JavaScript中填充 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <i class="bi bi-file-text"></i> 详细分析
+                        </div>
+                        <div class="card-body" id="modalAnalysisText">
+                            <!-- 将在JavaScript中填充 -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="downloadAnalysisBtn">
+                        <i class="bi bi-download"></i> 下载报告
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 检查登录状态
+        function checkAuth() {
+            fetch('/profile', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login.html';
+                    return null;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) {
+                    document.getElementById('username').textContent = data.user.username;
+                    if (data.user.is_admin) {
+                        document.getElementById('adminMenu').style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.href = '/login.html';
+            });
+        }
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = '/login.html';
+                }
+            });
+        });
+
+        // 侧边栏切换
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const target = this.getAttribute('data-target');
+                if (!target) return;
+                
+                // 更新侧边栏激活状态
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 显示对应内容
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                document.getElementById(target).style.display = 'block';
+                
+                // 加载内容
+                if (target === 'analysis-history') {
+                    loadAnalysisHistory(1);
+                } else if (target === 'analyze-new') {
+                    loadDetections();
+                }
+            });
+        });
+
+        // 图片上传预览
+        const uploadArea = document.getElementById('uploadArea');
+        const imageUpload = document.getElementById('imageUpload');
+        const uploadPreview = document.getElementById('uploadPreview');
+        const previewImage = document.getElementById('previewImage');
+        const changeImageBtn = document.getElementById('changeImageBtn');
+        const analyzeImageBtn = document.getElementById('analyzeImageBtn');
+
+        uploadArea.addEventListener('click', () => imageUpload.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#6c757d';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = '';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = '';
+            
+            if (e.dataTransfer.files.length) {
+                imageUpload.files = e.dataTransfer.files;
+                handleImageUpload(e.dataTransfer.files[0]);
+            }
+        });
+        
+        imageUpload.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleImageUpload(e.target.files[0]);
+            }
+        });
+        
+        function handleImageUpload(file) {
+            if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
+                alert('请上传JPG或PNG格式的图片');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                uploadArea.style.display = 'none';
+                uploadPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        changeImageBtn.addEventListener('click', () => {
+            uploadArea.style.display = 'block';
+            uploadPreview.style.display = 'none';
+            imageUpload.value = '';
+        });
+        
+        // 分析上传图片
+        analyzeImageBtn.addEventListener('click', () => {
+            if (!imageUpload.files.length) return;
+            
+            const formData = new FormData();
+            formData.append('image', imageUpload.files[0]);
+            
+            document.getElementById('analysisLoader').style.display = 'block';
+            document.getElementById('analysisResult').innerHTML = '';
+            
+            fetch('/api/analyze_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('analysisLoader').style.display = 'none';
+                if (data.status === 'success') {
+                    const analysisResult = document.getElementById('analysisResult');
+                    formatAndDisplayAnalysis(data.analysis_text, analysisResult);
+                } else {
+                    document.getElementById('analysisResult').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> 分析失败: ${data.message}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('analysisLoader').style.display = 'none';
+                document.getElementById('analysisResult').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> 请求错误: ${error}
+                    </div>
+                `;
+            });
+        });
+
+        // 加载检测记录
+        function loadDetections() {
+            const detectionsLoader = document.getElementById('detectionsLoader');
+            const detectionsList = document.getElementById('detectionsList');
+            
+            detectionsLoader.style.display = 'block';
+            detectionsList.style.display = 'none';
+            
+            fetch('/api/user_detections?per_page=5')
+            .then(response => response.json())
+            .then(data => {
+                detectionsLoader.style.display = 'none';
+                detectionsList.style.display = 'block';
+                
+                if (data.status === 'success' && data.detections.length > 0) {
+                    const detectionsHtml = data.detections.map(detection => {
+                        const detectionDate = new Date(detection.timestamp).toLocaleString();
+                        const defectsCount = detection.num_defects;
+                        
+                        return `
+                            <div class="card mb-3">
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <img src="${detection.result_path}" class="img-fluid rounded-start" alt="检测结果">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                检测记录 #${detection.id}
+                                                <span class="badge bg-${defectsCount > 0 ? 'danger' : 'success'} badge-custom float-end">
+                                                    ${defectsCount > 0 ? `${defectsCount}个缺陷` : '无缺陷'}
+                                                </span>
+                                            </h6>
+                                            <p class="card-text"><small class="text-muted">${detectionDate}</small></p>
+                                            <button class="btn btn-sm btn-primary" onclick="analyzeDetection(${detection.id})">
+                                                <i class="bi bi-robot"></i> AI分析
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    detectionsList.innerHTML = detectionsHtml;
+                } else {
+                    detectionsList.innerHTML = `
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-info-circle" style="font-size: 48px;"></i>
+                            <p class="mt-3">暂无检测记录，请先进行缺陷检测</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                detectionsLoader.style.display = 'none';
+                detectionsList.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> 加载失败: ${error}
+                    </div>
+                `;
+            });
+        }
+
+        // 分析检测记录
+        function analyzeDetection(detectionId) {
+            document.getElementById('analysisLoader').style.display = 'block';
+            document.getElementById('analysisResult').innerHTML = '';
+            
+            fetch(`/api/analyze_detection/${detectionId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('analysisLoader').style.display = 'none';
+                if (data.status === 'success') {
+                    const analysisResult = document.getElementById('analysisResult');
+                    formatAndDisplayAnalysis(data.analysis_text, analysisResult);
+                } else {
+                    document.getElementById('analysisResult').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> 分析失败: ${data.message}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('analysisLoader').style.display = 'none';
+                document.getElementById('analysisResult').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> 请求错误: ${error}
+                    </div>
+                `;
+            });
+        }
+
+        // 格式化和显示分析结果
+        function formatAndDisplayAnalysis(analysisText, targetElement) {
+            // 初始化HTML内容
+            let formattedHtml = '<div class="analysis-formatted p-2">';
+            
+            // 处理标题
+            let sections = analysisText.split(/(\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:])/).filter(Boolean);
+            if (sections.length > 1) {
+                // 有结构化标题的情况
+                for (let i = 0; i < sections.length; i++) {
+                    const section = sections[i].trim();
+                    
+                    // 检查是否是标题
+                    if (/^\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:]$/.test(section)) {
+                        // 这是一个标题
+                        const titleNumber = section.match(/^\d+/)[0];
+                        const titleText = section.replace(/^\d+\.\s+/, '').replace(/[：:]$/, '');
+                        
+                        // 添加图标
+                        let icon = 'bi-info-circle';
+                        if (titleText.includes('严重') || titleText.includes('程度')) {
+                            icon = 'bi-exclamation-triangle';
+                        } else if (titleText.includes('原因')) {
+                            icon = 'bi-search';
+                        } else if (titleText.includes('建议') || titleText.includes('修复')) {
+                            icon = 'bi-tools';
+                        } else if (titleText.includes('预防')) {
+                            icon = 'bi-shield-check';
+                        }
+                        
+                        formattedHtml += `
+                            <div class="analysis-section mb-3">
+                                <h5 class="analysis-title">
+                                    <i class="bi ${icon} me-2"></i>${titleNumber}. ${titleText}
+                                </h5>
+                                <div class="analysis-content ps-4 pt-2">
+                        `;
+                    } else if (i > 0 && /^\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:]$/.test(sections[i-1])) {
+                        // 这是标题后的内容
+                        // 将文本中的要点标记为列表
+                        const contentWithList = section
+                            .replace(/([•·]\s+)/g, '<li>')
+                            .replace(/(\d+\)\s+)/g, '<li>')
+                            .replace(/(\([a-zA-Z]\)\s+)/g, '<li>')
+                            .split('\n')
+                            .map(line => {
+                                line = line.trim();
+                                if (line.startsWith('<li>')) {
+                                    return `${line}</li>`;
+                                }
+                                return line;
+                            })
+                            .join('\n');
+                        
+                        formattedHtml += `<div class="mb-2">${contentWithList}</div>`;
+                        formattedHtml += '</div></div>';
+                    }
+                }
+            } else {
+                // 无结构化标题的情况
+                formattedHtml += `<div class="analysis-general">${analysisText.replace(/\n/g, '<br>')}</div>`;
+            }
+            
+            formattedHtml += '</div>';
+            
+            // 设置HTML内容
+            targetElement.innerHTML = formattedHtml;
+        }
+
+        // 加载分析历史
+        function loadAnalysisHistory(page = 1) {
+            const historyLoader = document.getElementById('historyLoader');
+            const historyList = document.getElementById('historyList');
+            const pagination = document.getElementById('historyPagination');
+            
+            historyLoader.style.display = 'block';
+            historyList.style.display = 'none';
+            
+            fetch(`/api/analysis_history?page=${page}&per_page=10`)
+            .then(response => response.json())
+            .then(data => {
+                historyLoader.style.display = 'none';
+                historyList.style.display = 'block';
+                
+                if (data.status === 'success' && data.analyses.length > 0) {
+                    const historyHtml = data.analyses.map(analysis => {
+                        const analysisDate = new Date(analysis.timestamp).toLocaleString();
+                        
+                        // 获取分析文本的预览
+                        let previewText = '';
+                        // 检查文本是否有结构化的标题
+                        const sections = analysis.analysis_text.split(/(\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:])/).filter(Boolean);
+                        if (sections.length > 1) {
+                            // 有结构，显示第一个标题作为预览
+                            const firstTitle = sections[0].trim();
+                            let firstContent = '';
+                            if (sections.length > 1) {
+                                firstContent = sections[1].trim().substring(0, 80);
+                                if (firstContent.length > 80) firstContent += '...';
+                            }
+                            previewText = `<div class="preview-title">${firstTitle}</div>
+                                          <div class="preview-content text-muted">${firstContent}</div>`;
+                        } else {
+                            // 无结构，直接截取文本
+                            previewText = analysis.analysis_text.length > 100 
+                                ? analysis.analysis_text.substring(0, 100) + '...' 
+                                : analysis.analysis_text;
+                        }
+                        
+                        return `
+                            <div class="card mb-3">
+                                <div class="row g-0">
+                                    <div class="col-md-3">
+                                        <img src="${analysis.image_path}" class="img-fluid rounded-start" alt="分析图像" style="max-height: 150px; width: 100%; object-fit: cover;">
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="card-body">
+                                            <h6 class="card-title d-flex justify-content-between align-items-center">
+                                                <span>分析记录 #${analysis.id}</span>
+                                                ${analysis.detection_id ? `<span class="badge bg-info">检测记录 #${analysis.detection_id}</span>` : ''}
+                                            </h6>
+                                            <div class="card-text analysis-preview mb-2">${previewText}</div>
+                                            <p class="card-text d-flex justify-content-between">
+                                                <small class="text-muted">${analysisDate}</small>
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                    onclick="showAnalysisDetail('${analysis.image_path}', '${analysisDate}', ${JSON.stringify(analysis.analysis_text).replace(/'/g, "&#39;")})">
+                                                    <i class="bi bi-eye"></i> 查看详情
+                                                </button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    historyList.innerHTML = historyHtml;
+                    
+                    // 生成分页
+                    generatePagination(data.page, data.pages, pagination);
+                } else {
+                    historyList.innerHTML = `
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-info-circle" style="font-size: 48px;"></i>
+                            <p class="mt-3">暂无分析记录</p>
+                        </div>
+                    `;
+                    pagination.innerHTML = '';
+                }
+            })
+            .catch(error => {
+                historyLoader.style.display = 'none';
+                historyList.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> 加载失败: ${error}
+                    </div>
+                `;
+            });
+        }
+
+        // 生成分页
+        function generatePagination(currentPage, totalPages, container) {
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadAnalysisHistory(${currentPage - 1}); return false;">上一页</a>
+                </li>
+            `;
+            
+            // 生成页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="loadAnalysisHistory(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+            
+            paginationHtml += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadAnalysisHistory(${currentPage + 1}); return false;">下一页</a>
+                </li>
+            `;
+            
+            container.innerHTML = paginationHtml;
+        }
+
+        // 显示分析详情
+        function showAnalysisDetail(imagePath, timestamp, analysisText) {
+            const modal = new bootstrap.Modal(document.getElementById('analysisDetailModal'));
+            document.getElementById('modalImage').src = imagePath;
+            document.getElementById('modalTimestamp').textContent = timestamp;
+            
+            // 使用相同的格式化函数显示详细结果
+            const modalAnalysisText = document.getElementById('modalAnalysisText');
+            formatAndDisplayAnalysis(analysisText, modalAnalysisText);
+            
+            // 提取关键信息并显示在概要面板中
+            const analysisSummary = document.getElementById('analysisSummary');
+            extractAndDisplaySummary(analysisText, analysisSummary);
+            
+            // 设置下载功能
+            document.getElementById('downloadAnalysisBtn').onclick = () => generateAndDownloadReport(analysisText, timestamp);
+            
+            modal.show();
+        }
+        
+        // 提取概要信息
+        function extractAndDisplaySummary(analysisText, targetElement) {
+            // 初始化HTML
+            let summaryHtml = '<ul class="list-group list-group-flush">';
+            
+            // 检查是否有结构化信息
+            const sections = analysisText.split(/(\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:])/).filter(Boolean);
+            if (sections.length > 1) {
+                // 有结构，提取关键信息
+                let keyFindings = [];
+                
+                // 遍历每个部分，提取重要的信息
+                for (let i = 0; i < sections.length; i += 2) {
+                    if (i + 1 < sections.length) {
+                        const title = sections[i].trim();
+                        const content = sections[i + 1].trim();
+                        
+                        // 从内容中提取第一个句子或关键要点
+                        let keyPoint = '';
+                        if (content.includes('•') || content.includes('·')) {
+                            // 提取第一个要点
+                            const bulletMatch = content.match(/[•·]\s+([^\n]+)/);
+                            if (bulletMatch) keyPoint = bulletMatch[1];
+                        } else if (content.includes('1)') || content.includes('1）')) {
+                            // 提取第一个数字点
+                            const numMatch = content.match(/[1][)）]\s+([^\n]+)/);
+                            if (numMatch) keyPoint = numMatch[1];
+                        } else {
+                            // 提取第一个句号前的内容
+                            const sentenceMatch = content.match(/^([^。]+。?)/);
+                            if (sentenceMatch) keyPoint = sentenceMatch[1];
+                            else keyPoint = content.substring(0, Math.min(content.length, 70)) + '...';
+                        }
+                        
+                        // 添加到关键发现
+                        keyFindings.push({ title: title, point: keyPoint });
+                    }
+                }
+                
+                // 生成HTML
+                keyFindings.forEach(finding => {
+                    const titleNumber = finding.title.match(/^\d+/)[0];
+                    const titleText = finding.title.replace(/^\d+\.\s+/, '').replace(/[：:]$/, '');
+                    
+                    summaryHtml += `
+                        <li class="list-group-item p-2">
+                            <span class="badge bg-secondary me-2">${titleNumber}</span>
+                            <strong>${titleText}:</strong> ${finding.point}
+                        </li>
+                    `;
+                });
+            } else {
+                // 无结构，提取前几个句子
+                const sentences = analysisText.split(/[。？！]/).filter(s => s.trim().length > 0);
+                const topSentences = sentences.slice(0, Math.min(3, sentences.length));
+                
+                topSentences.forEach(sentence => {
+                    summaryHtml += `
+                        <li class="list-group-item p-2">
+                            <i class="bi bi-arrow-right-circle me-2"></i>${sentence}
+                        </li>
+                    `;
+                });
+            }
+            
+            summaryHtml += '</ul>';
+            targetElement.innerHTML = summaryHtml;
+        }
+        
+        // 生成并下载报告
+        function generateAndDownloadReport(analysisText, timestamp) {
+            // 创建报告HTML
+            const reportHTML = `
+                <!DOCTYPE html>
+                <html lang="zh-CN">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>AI分析报告 - ${timestamp}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                        h1 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+                        .header { margin-bottom: 30px; }
+                        .timestamp { color: #666; font-size: 14px; }
+                        .section { margin-bottom: 25px; }
+                        .section h2 { color: #0066cc; margin-bottom: 15px; border-left: 4px solid #0066cc; padding-left: 10px; }
+                        .footer { margin-top: 50px; color: #999; font-size: 12px; text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>工业缺陷AI分析报告</h1>
+                        <p class="timestamp">生成时间: ${timestamp}</p>
+                    </div>
+                    <div class="section">
+                        <h2>分析结果</h2>
+                        <div class="content">
+                            ${analysisText.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <p>此报告由工业缺陷检测系统自动生成 © ${new Date().getFullYear()}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // 创建Blob对象
+            const blob = new Blob([reportHTML], { type: 'text/html' });
+            
+            // 创建下载链接
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `AI分析报告_${new Date().toISOString().split('T')[0]}.html`;
+            link.click();
+            
+            // 清理
+            URL.revokeObjectURL(link.href);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadDetections();
+        });
+    </script>
+</body>
+</html> 

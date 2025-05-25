@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业产品缺陷检测系统 - 智能大屏</title>
+    
+    <!-- CSS 框架 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* 工业大屏风格 */
+        :root {
+            --primary-color: #00d4ff;
+            --secondary-color: #0099cc;
+            --success-color: #00ff88;
+            --warning-color: #ffaa00;
+            --danger-color: #ff4444;
+            --dark-bg: #0a0f1b;
+            --card-bg: #162133;
+            --border-color: #2a3f5f;
+            --text-primary: #ffffff;
+            --text-secondary: #8892a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .top-header {
+            background: linear-gradient(135deg, #1a2332 0%, #0f1823 100%);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .system-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online {
+            background-color: var(--success-color);
+            box-shadow: 0 0 10px var(--success-color);
+        }
+
+        .status-offline {
+            background-color: var(--danger-color);
+            box-shadow: 0 0 10px var(--danger-color);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* 主要内容区域 */
+        .main-container {
+            padding: 20px;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* 数据卡片 */
+        .data-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .card-header-custom {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* 统计数字 */
+        .stat-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 按钮样式 */
+        .btn-industrial {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-industrial:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-danger-industrial {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #cc0000 100%);
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+        }
+
+        /* 视频显示区域 */
+        .video-container {
+            background: #000;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: auto;
+            max-height: 600px;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        /* 检测结果 */
+        .detection-result {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .detection-result:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* 模型选择 */
+        .model-selector {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .model-selector option {
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        /* 加载动画 */
+        .loader {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .system-title {
+                font-size: 20px;
+            }
+            .stat-number {
+                font-size: 32px;
+            }
+        }
+
+        /* 文件上传区域 */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--primary-color);
+            background: rgba(0, 212, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="top-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="system-title">
+                        <i class="fas fa-industry"></i> 工业产品缺陷检测系统
+                    </h1>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="status-indicator status-online"></span>
+                    <span class="me-3">系统运行中</span>
+                    <span class="me-3">
+                        <i class="fas fa-clock"></i> 
+                        <span id="current-time"></span>
+                    </span>
+                    <span class="me-3">
+                        <i class="fas fa-microchip"></i> 
+                        <span id="device-info">CPU</span>
+                    </span>
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> <span id="username">用户</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="/ai-analysis.html"><i class="fas fa-robot"></i> AI智能分析</a></li>
+                            <li><a class="dropdown-item" href="/profile.html"><i class="fas fa-id-card"></i> 个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要内容 -->
+    <div class="main-container">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- 左侧控制面板 -->
+                <div class="col-lg-3">
+                    <!-- 模型管理 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-brain"></i> 模型管理
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">选择模型</label>
+                            <select id="model-select" class="model-selector">
+                                <option value="">-- 请选择模型 --</option>
+                            </select>
+                        </div>
+                        <button id="load-model-btn" class="btn btn-industrial w-100 mb-2">
+                            <i class="fas fa-download"></i> 加载模型
+                        </button>
+                        <button id="upload-model-btn" class="btn btn-industrial w-100" onclick="document.getElementById('model-file').click()">
+                            <i class="fas fa-upload"></i> 上传本地模型
+                        </button>
+                        <input type="file" id="model-file" accept=".pt,.onnx,.torchscript" style="display: none;">
+                    </div>
+
+                    <!-- 检测控制 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-video"></i> 检测控制
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">视频源</label>
+                            <input type="text" id="video-source" class="form-control bg-dark text-white" 
+                                   placeholder="0 或 视频文件路径" value="0">
+                        </div>
+                        <button id="start-video-btn" class="btn btn-industrial w-100 mb-2">
+                            <i class="fas fa-play"></i> 开始检测
+                        </button>
+                        <button id="stop-video-btn" class="btn btn-danger-industrial btn-industrial w-100" disabled>
+                            <i class="fas fa-stop"></i> 停止检测
+                        </button>
+                        <div class="mt-3">
+                            <label class="form-label">置信度阈值</label>
+                            <input type="range" id="confidence-slider" class="form-range" 
+                                   min="0" max="1" step="0.05" value="0.5">
+                            <span id="confidence-value">0.5</span>
+                        </div>
+                    </div>
+
+                    <!-- 统计数据 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-chart-line"></i> 实时统计
+                        </div>
+                        <div class="text-center">
+                            <div class="stat-number" id="total-detections">0</div>
+                            <div class="stat-label">检测次数</div>
+                        </div>
+                        <hr class="my-3">
+                        <div class="text-center">
+                            <div class="stat-number" id="total-defects">0</div>
+                            <div class="stat-label">缺陷总数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 中间视频显示区域 -->
+                <div class="col-lg-6">
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-camera"></i> 实时检测画面
+                        </div>
+                        <div class="video-container">
+                            <img id="video-feed" class="video-feed" style="display: none;">
+                            <div id="video-placeholder" class="text-center">
+                                <i class="fas fa-video fa-4x text-secondary mb-3"></i>
+                                <p class="text-secondary">等待视频源...</p>
+                            </div>
+                            <div class="video-overlay" id="fps-counter" style="display: none;">
+                                FPS: <span id="fps-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图片上传检测 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-image"></i> 图片检测
+                        </div>
+                        <div class="upload-zone" id="upload-zone">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                            <p>拖拽图片到此处或点击上传</p>
+                            <input type="file" id="image-file" accept="image/*" style="display: none;">
+                        </div>
+                        <div id="image-result" class="mt-3" style="display: none;">
+                            <img id="result-image" class="img-fluid rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧信息面板 -->
+                <div class="col-lg-3">
+                    <!-- 检测结果 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-list"></i> 检测结果
+                        </div>
+                        <div id="detection-list" style="max-height: 400px; overflow-y: auto;">
+                            <p class="text-secondary">暂无检测结果</p>
+                        </div>
+                    </div>
+
+                    <!-- 缺陷类型分布 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-chart-pie"></i> 缺陷类型分布
+                        </div>
+                        <div id="defect-chart" class="chart-container"></div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-cogs"></i> 系统操作
+                        </div>
+                        <button id="export-data-btn" class="btn btn-industrial w-100 mb-2">
+                            <i class="fas fa-file-export"></i> 导出数据
+                        </button>
+                        <button id="clear-history-btn" class="btn btn-danger-industrial btn-industrial w-100 mb-2">
+                            <i class="fas fa-trash"></i> 清空历史
+                        </button>
+                        <a href="/ai-analysis.html" class="btn btn-industrial w-100">
+                            <i class="fas fa-robot"></i> DeepSeek AI分析
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    
+    <script>
+        // 全局变量
+        let isVideoRunning = false;
+        let currentModel = null;
+        let defectChart = null;
+        let detectionHistory = [];
+        let fps = 0;
+        let lastFrameTime = Date.now();
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSystem();
+            updateTime();
+            setInterval(updateTime, 1000);
+            loadModels();
+            initializeCharts();
+            setupEventListeners();
+        });
+
+        // 系统初始化
+        function initializeSystem() {
+            // 检查设备信息
+            if (navigator.gpu) {
+                document.getElementById('device-info').textContent = 'GPU 加速';
+            }
+        }
+
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN');
+            document.getElementById('current-time').textContent = timeString;
+        }
+
+        // 加载可用模型
+        async function loadModels() {
+            try {
+                const response = await fetch('/api/models');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const select = document.getElementById('model-select');
+                    select.innerHTML = '<option value="">-- 请选择模型 --</option>';
+                    
+                    data.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.path;
+                        option.textContent = `${model.name} (${model.type}) - ${model.size}`;
+                        select.appendChild(option);
+                    });
+                    
+                    // 如果有当前模型，选中它
+                    if (data.current_model && data.current_model.path) {
+                        select.value = data.current_model.path;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load models:', error);
+                showNotification('加载模型列表失败', 'error');
+            }
+
+            // 获取用户信息
+            try {
+                const response = await fetch('/profile', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    document.getElementById('username').textContent = data.user.username;
+                    // 设置管理员菜单
+                    if (data.user.is_admin) {
+                        document.querySelectorAll('.admin-only').forEach(el => {
+                            el.style.display = 'block';
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load user info:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        // 初始化图表
+        function initializeCharts() {
+            defectChart = echarts.init(document.getElementById('defect-chart'));
+            
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                series: [{
+                    name: '缺陷类型',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#0a0f1b',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '16',
+                            fontWeight: 'bold',
+                            color: '#fff'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: []
+                }],
+                color: ['#00d4ff', '#00ff88', '#ffaa00', '#ff4444', '#9966ff']
+            };
+            
+            defectChart.setOption(option);
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 启动视频
+            document.getElementById('start-video-btn').addEventListener('click', startVideo);
+            
+            // 停止视频
+            document.getElementById('stop-video-btn').addEventListener('click', stopVideo);
+            
+            // 加载模型
+            document.getElementById('load-model-btn').addEventListener('click', loadSelectedModel);
+            
+            // 上传模型
+            document.getElementById('model-file').addEventListener('change', uploadModel);
+            
+            // 置信度滑块
+            const confidenceSlider = document.getElementById('confidence-slider');
+            confidenceSlider.addEventListener('input', function() {
+                document.getElementById('confidence-value').textContent = this.value;
+            });
+            
+            // 图片上传
+            const uploadZone = document.getElementById('upload-zone');
+            const imageFile = document.getElementById('image-file');
+            
+            uploadZone.addEventListener('click', function() {
+                imageFile.click();
+            });
+            
+            uploadZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            uploadZone.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
+            
+            uploadZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    imageFile.files = e.dataTransfer.files;
+                    handleImageUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            imageFile.addEventListener('change', function(e) {
+                if (this.files.length > 0) {
+                    handleImageUpload(this.files[0]);
+                }
+            });
+            
+            // 导出数据
+            document.getElementById('export-data-btn').addEventListener('click', exportData);
+            
+            // 清空历史
+            document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
+            
+            // 退出登录
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        }
+
+        // 加载模型
+        async function loadSelectedModel() {
+            const modelPath = document.getElementById('model-select').value;
+            if (!modelPath) {
+                showNotification('请选择一个模型', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/load_model', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_path: modelPath })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    currentModel = data.model_info;
+                    showNotification('模型加载成功', 'success');
+                } else {
+                    showNotification('模型加载失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load model:', error);
+                showNotification('模型加载失败', 'error');
+            }
+        }
+
+        // 上传模型
+        async function uploadModel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('model', file);
+            
+            try {
+                const response = await fetch('/api/upload_model', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showNotification('模型上传成功', 'success');
+                    loadModels(); // 重新加载模型列表
+                } else {
+                    showNotification('模型上传失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to upload model:', error);
+                showNotification('模型上传失败', 'error');
+            }
+        }
+
+        // 开始视频检测
+        async function startVideo() {
+            const source = document.getElementById('video-source').value;
+            
+            try {
+                const response = await fetch('/api/start_video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source: source })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    isVideoRunning = true;
+                    document.getElementById('start-video-btn').disabled = true;
+                    document.getElementById('stop-video-btn').disabled = false;
+                    document.getElementById('video-placeholder').style.display = 'none';
+                    document.getElementById('video-feed').style.display = 'block';
+                    document.getElementById('fps-counter').style.display = 'block';
+                    
+                    // 设置视频源
+                    document.getElementById('video-feed').src = '/video_feed';
+                    
+                    // 启动FPS计算
+                    calculateFPS();
+                    
+                    showNotification('视频检测已启动', 'success');
+                } else {
+                    showNotification('启动失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to start video:', error);
+                showNotification('启动视频失败', 'error');
+            }
+        }
+
+        // 停止视频检测
+        async function stopVideo() {
+            try {
+                const response = await fetch('/api/stop_video', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    isVideoRunning = false;
+                    document.getElementById('start-video-btn').disabled = false;
+                    document.getElementById('stop-video-btn').disabled = true;
+                    document.getElementById('video-placeholder').style.display = 'block';
+                    document.getElementById('video-feed').style.display = 'none';
+                    document.getElementById('fps-counter').style.display = 'none';
+                    document.getElementById('video-feed').src = '';
+                    
+                    showNotification('视频检测已停止', 'info');
+                }
+            } catch (error) {
+                console.error('Failed to stop video:', error);
+                showNotification('停止视频失败', 'error');
+            }
+        }
+
+        // 计算FPS
+        function calculateFPS() {
+            if (!isVideoRunning) return;
+            
+            const now = Date.now();
+            const delta = now - lastFrameTime;
+            fps = Math.round(1000 / delta);
+            lastFrameTime = now;
+            
+            document.getElementById('fps-value').textContent = fps;
+            
+            requestAnimationFrame(calculateFPS);
+        }
+
+        // 处理图片上传
+        function handleImageUpload(file) {
+            if (file) {
+                processImageFile(file);
+            }
+        }
+
+        // 处理图片文件
+        async function processImageFile(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('confidence', document.getElementById('confidence-slider').value);
+            
+            try {
+                const response = await fetch('/api/detect', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // 显示结果图片
+                    document.getElementById('result-image').src = data.result_image;
+                    document.getElementById('image-result').style.display = 'block';
+                    
+                    // 更新检测结果
+                    updateDetectionResults(data.detections);
+                    
+                    // 更新统计
+                    updateStatistics();
+                    
+                    showNotification(`检测完成，发现 ${data.total_defects} 个缺陷`, 'success');
+                } else {
+                    showNotification('检测失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to detect image:', error);
+                showNotification('图片检测失败', 'error');
+            }
+        }
+
+        // 更新检测结果
+        function updateDetectionResults(detections) {
+            const listContainer = document.getElementById('detection-list');
+            listContainer.innerHTML = '';
+            
+            if (detections.length === 0) {
+                listContainer.innerHTML = '<p class="text-secondary">未检测到缺陷</p>';
+                return;
+            }
+            
+            detections.forEach((detection, index) => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'detection-result';
+                resultDiv.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <span><i class="fas fa-exclamation-triangle text-warning"></i> ${detection.class_name}</span>
+                        <span class="badge bg-primary">${(detection.confidence * 100).toFixed(1)}%</span>
+                    </div>
+                    <small class="text-secondary">位置: ${detection.bbox.map(v => Math.round(v)).join(', ')}</small>
+                `;
+                listContainer.appendChild(resultDiv);
+            });
+            
+            // 更新图表
+            updateDefectChart(detections);
+        }
+
+        // 更新缺陷类型图表
+        function updateDefectChart(detections) {
+            const defectCounts = {};
+            detections.forEach(detection => {
+                defectCounts[detection.class_name] = (defectCounts[detection.class_name] || 0) + 1;
+            });
+            
+            const chartData = Object.entries(defectCounts).map(([name, value]) => ({
+                name: name,
+                value: value
+            }));
+            
+            defectChart.setOption({
+                series: [{
+                    data: chartData
+                }]
+            });
+        }
+
+        // 更新统计数据
+        async function updateStatistics() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('total-detections').textContent = data.stats.total_detections;
+                    document.getElementById('total-defects').textContent = data.stats.total_defects;
+                }
+            } catch (error) {
+                console.error('Failed to update statistics:', error);
+            }
+        }
+
+        // 导出数据
+        async function exportData() {
+            try {
+                window.location.href = '/api/export_data';
+                showNotification('数据导出成功', 'success');
+            } catch (error) {
+                console.error('Failed to export data:', error);
+                showNotification('数据导出失败', 'error');
+            }
+        }
+
+        // 清空历史
+        function clearHistory() {
+            if (confirm('确定要清空所有检测历史吗？')) {
+                detectionHistory = [];
+                document.getElementById('detection-list').innerHTML = '<p class="text-secondary">暂无检测结果</p>';
+                updateStatistics();
+                showNotification('历史记录已清空', 'info');
+            }
+        }
+
+        // 退出登录
+        async function logout() {
+            try {
+                const response = await fetch('/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Failed to logout:', error);
+                showNotification('退出失败，请重试', 'error');
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+            notification.style.zIndex = '9999';
+            notification.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // 定期更新统计数据
+        setInterval(updateStatistics, 5000);
+    </script>
+</body>
+</html>

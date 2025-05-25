@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理控制台 - 工业缺陷检测系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #1a2c56;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .card-header {
+            background-color: #f1f5f9;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+        .sidebar {
+            background-color: #343a40;
+            min-height: 100vh;
+            position: sticky;
+            top: 0;
+            padding-top: 20px;
+            color: #fff;
+        }
+        .sidebar-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px 0;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        .sidebar-item:hover {
+            background-color: #495057;
+        }
+        .sidebar-item.active {
+            background-color: #0d6efd;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid #0d6efd;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .badge-role {
+            font-weight: normal;
+            padding: 5px 10px;
+        }
+        .stats-card {
+            transition: all 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        .stats-icon {
+            font-size: 2.5rem;
+            color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-eye"></i> 工业产品缺陷检测系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house-door"></i> 首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ai-analysis.html">
+                            <i class="bi bi-robot"></i> AI分析
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin.html">
+                            <i class="bi bi-gear"></i> 管理控制台
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> <span id="username">管理员</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                            <li><a class="dropdown-item" href="/profile.html"><i class="bi bi-person"></i> 个人资料</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="sidebar-item active" data-target="dashboard">
+                    <i class="bi bi-speedometer2"></i> 仪表盘
+                </div>
+                <div class="sidebar-item" data-target="users">
+                    <i class="bi bi-people"></i> 用户管理
+                </div>
+                <div class="sidebar-item" data-target="detections">
+                    <i class="bi bi-camera"></i> 检测记录
+                </div>
+                <div class="sidebar-item" data-target="analysis">
+                    <i class="bi bi-graph-up"></i> 分析记录
+                </div>
+                <div class="sidebar-item" data-target="settings">
+                    <i class="bi bi-gear"></i> 系统设置
+                </div>
+                <hr>
+                <div class="sidebar-item" onclick="window.location.href='/'">
+                    <i class="bi bi-arrow-left"></i> 返回主页
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- 仪表盘 -->
+                <div id="dashboard" class="content-section active">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2><i class="bi bi-speedometer2"></i> 系统仪表盘</h2>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
+                                <i class="bi bi-arrow-repeat"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="statsCards">
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="stats-icon mb-2">
+                                        <i class="bi bi-people"></i>
+                                    </div>
+                                    <h5 class="card-title">用户总数</h5>
+                                    <h3 class="card-text" id="userCount">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </h3>
+                                    <p class="card-text text-muted"><small>注册用户数量</small></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="stats-icon mb-2">
+                                        <i class="bi bi-camera"></i>
+                                    </div>
+                                    <h5 class="card-title">检测总数</h5>
+                                    <h3 class="card-text" id="detectionCount">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </h3>
+                                    <p class="card-text text-muted"><small>已完成检测次数</small></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="stats-icon mb-2">
+                                        <i class="bi bi-robot"></i>
+                                    </div>
+                                    <h5 class="card-title">分析总数</h5>
+                                    <h3 class="card-text" id="analysisCount">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </h3>
+                                    <p class="card-text text-muted"><small>AI分析次数</small></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stats-card h-100">
+                                <div class="card-body text-center">
+                                    <div class="stats-icon mb-2">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                    </div>
+                                    <h5 class="card-title">缺陷总数</h5>
+                                    <h3 class="card-text" id="defectCount">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </h3>
+                                    <p class="card-text text-muted"><small>已检测出的缺陷总数</small></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div><i class="bi bi-bar-chart"></i> 最近7天检测统计</div>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="detectionsChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div><i class="bi bi-pie-chart"></i> 缺陷类型分布</div>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="defectTypesChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div><i class="bi bi-clock-history"></i> 最近活动</div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recentActivityLoader" class="loader"></div>
+                                    <div id="recentActivityList" style="display: none;">
+                                        <ul class="list-group list-group-flush" id="activityItems">
+                                            <!-- 动态加载最近活动 -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户管理 -->
+                <div id="users" class="content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2><i class="bi bi-people"></i> 用户管理</h2>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                <i class="bi bi-person-plus"></i> 添加用户
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <i class="bi bi-list-ul"></i> 用户列表
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control form-control-sm" id="userSearchInput" placeholder="搜索用户...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="usersLoader" class="loader"></div>
+                            <div id="usersTable" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>用户名</th>
+                                                <th>邮箱</th>
+                                                <th>角色</th>
+                                                <th>状态</th>
+                                                <th>注册时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usersList">
+                                            <!-- 用户列表将在JavaScript中动态加载 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <nav aria-label="Page navigation" class="mt-4">
+                                    <ul class="pagination justify-content-center" id="usersPagination">
+                                        <!-- 分页将在JavaScript中动态生成 -->
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 检测记录 -->
+                <div id="detections" class="content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2><i class="bi bi-camera"></i> 检测记录</h2>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="input-group input-group-sm me-2">
+                                <span class="input-group-text">开始日期</span>
+                                <input type="date" class="form-control" id="detectionsStartDate">
+                            </div>
+                            <div class="input-group input-group-sm me-2">
+                                <span class="input-group-text">结束日期</span>
+                                <input type="date" class="form-control" id="detectionsEndDate">
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="filterDetectionsBtn">
+                                <i class="bi bi-funnel"></i> 筛选
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <i class="bi bi-list-ul"></i> 检测记录列表
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control form-control-sm" id="detectionSearchInput" placeholder="搜索用户或ID...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="detectionsLoader" class="loader"></div>
+                            <div id="detectionsTable" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>用户</th>
+                                                <th>检测时间</th>
+                                                <th>检测图像</th>
+                                                <th>检测结果</th>
+                                                <th>缺陷数量</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detectionsList">
+                                            <!-- 检测记录将在JavaScript中动态加载 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <nav aria-label="Page navigation" class="mt-4">
+                                    <ul class="pagination justify-content-center" id="detectionsPagination">
+                                        <!-- 分页将在JavaScript中动态生成 -->
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分析记录 -->
+                <div id="analysis" class="content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2><i class="bi bi-graph-up"></i> 分析记录</h2>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="input-group input-group-sm me-2">
+                                <span class="input-group-text">开始日期</span>
+                                <input type="date" class="form-control" id="analysisStartDate">
+                            </div>
+                            <div class="input-group input-group-sm me-2">
+                                <span class="input-group-text">结束日期</span>
+                                <input type="date" class="form-control" id="analysisEndDate">
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="filterAnalysisBtn">
+                                <i class="bi bi-funnel"></i> 筛选
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <i class="bi bi-list-ul"></i> 分析记录列表
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control form-control-sm" id="analysisSearchInput" placeholder="搜索用户或ID...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="analysisLoader" class="loader"></div>
+                            <div id="analysisTable" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>用户</th>
+                                                <th>分析时间</th>
+                                                <th>图像</th>
+                                                <th>关联检测</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="analysisList">
+                                            <!-- 分析记录将在JavaScript中动态加载 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <nav aria-label="Page navigation" class="mt-4">
+                                    <ul class="pagination justify-content-center" id="analysisPagination">
+                                        <!-- 分页将在JavaScript中动态生成 -->
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统设置 -->
+                <div id="settings" class="content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2><i class="bi bi-gear"></i> 系统设置</h2>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-sliders"></i> 检测设置
+                                </div>
+                                <div class="card-body">
+                                    <form id="detectionSettingsForm">
+                                        <div class="mb-3">
+                                            <label for="confidenceThreshold" class="form-label">置信度阈值</label>
+                                            <div class="input-group">
+                                                <input type="range" class="form-range" min="0" max="1" step="0.05" id="confidenceThreshold" value="0.5" oninput="document.getElementById('confidenceValue').textContent = this.value">
+                                                <span class="ms-2" id="confidenceValue">0.5</span>
+                                            </div>
+                                            <div class="form-text">检测模型识别缺陷的最低置信度</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="maxResults" class="form-label">每次检测最大结果数</label>
+                                            <input type="number" class="form-control" id="maxResults" min="1" max="100" value="20">
+                                            <div class="form-text">单次检测最多返回的缺陷数量</div>
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="autoAnalysis" checked>
+                                            <label class="form-check-label" for="autoAnalysis">自动AI分析</label>
+                                            <div class="form-text">检测到严重缺陷时自动进行AI分析</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">保存检测设置</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-cloud"></i> API设置
+                                </div>
+                                <div class="card-body">
+                                    <form id="apiSettingsForm">
+                                        <div class="mb-3">
+                                            <label for="deepseekApiKey" class="form-label">DeepSeek API密钥</label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="deepseekApiKey">
+                                                <button class="btn btn-outline-secondary" type="button" id="toggleApiKey">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text">用于AI分析的DeepSeek API密钥</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="apiRequestTimeout" class="form-label">API请求超时(秒)</label>
+                                            <input type="number" class="form-control" id="apiRequestTimeout" min="5" max="120" value="30">
+                                            <div class="form-text">外部API请求的超时时间</div>
+                                        </div>
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="enableRateLimiting" checked>
+                                            <label class="form-check-label" for="enableRateLimiting">启用API限流</label>
+                                            <div class="form-text">限制单个用户的API请求频率</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">保存API设置</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-envelope"></i> 邮件设置
+                                </div>
+                                <div class="card-body">
+                                    <form id="emailSettingsForm">
+                                        <div class="mb-3">
+                                            <label for="smtpServer" class="form-label">SMTP服务器</label>
+                                            <input type="text" class="form-control" id="smtpServer" placeholder="smtp.example.com">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="smtpPort" class="form-label">SMTP端口</label>
+                                            <input type="number" class="form-control" id="smtpPort" placeholder="587">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="smtpUsername" class="form-label">SMTP用户名</label>
+                                            <input type="text" class="form-control" id="smtpUsername" placeholder="username@example.com">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="smtpPassword" class="form-label">SMTP密码</label>
+                                            <input type="password" class="form-control" id="smtpPassword">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="senderEmail" class="form-label">发件人邮箱</label>
+                                            <input type="email" class="form-control" id="senderEmail" placeholder="noreply@example.com">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">保存邮件设置</button>
+                                        <button type="button" class="btn btn-outline-secondary ms-2" id="testEmailBtn">发送测试邮件</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-database"></i> 数据库维护
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle"></i> 警告：以下操作可能导致数据丢失，请谨慎操作！
+                                    </div>
+                                    <div class="d-grid gap-3">
+                                        <button type="button" class="btn btn-outline-primary" id="backupDbBtn">
+                                            <i class="bi bi-download"></i> 备份数据库
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success" id="optimizeDbBtn">
+                                            <i class="bi bi-speedometer"></i> 优化数据库
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="clearDetectionsBtn">
+                                            <i class="bi bi-trash"></i> 清除检测记录
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" id="clearAnalysisBtn">
+                                            <i class="bi bi-trash"></i> 清除分析记录
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 添加用户模态框 -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> 添加用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label for="newUsername" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="newUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newEmail" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="newEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="newPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newIsAdmin">
+                                <label class="form-check-label" for="newIsAdmin">
+                                    管理员权限
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitAddUser">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> 编辑用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label for="editUsername" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="editUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEmail" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="editEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPassword" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="editPassword" placeholder="留空则不修改">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsAdmin">
+                                <label class="form-check-label" for="editIsAdmin">
+                                    管理员权限
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive" checked>
+                                <label class="form-check-label" for="editIsActive">
+                                    账号激活
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitEditUser">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger"></i> 确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除这个用户吗？此操作不可撤销。</p>
+                    <input type="hidden" id="deleteUserId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看分析模态框 -->
+    <div class="modal fade" id="viewAnalysisModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-file-text"></i> AI分析详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <img id="analysisImage" src="" alt="分析图像" class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <i class="bi bi-info-circle"></i> 基本信息
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>ID:</strong> <span id="analysisDetailId"></span></p>
+                                    <p><strong>用户:</strong> <span id="analysisDetailUser"></span></p>
+                                    <p><strong>时间:</strong> <span id="analysisDetailTime"></span></p>
+                                    <p><strong>关联检测:</strong> <span id="analysisDetailDetection"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-robot"></i> 分析内容
+                        </div>
+                        <div class="card-body">
+                            <div id="analysisDetailContent" class="analysis-formatted"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看检测模态框 -->
+    <div class="modal fade" id="viewDetectionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-camera"></i> 检测详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <h6>原始图像</h6>
+                                <img id="detectionOriginalImage" src="" alt="原始图像" class="img-fluid rounded mb-3">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <h6>检测结果</h6>
+                                <img id="detectionResultImage" src="" alt="检测结果" class="img-fluid rounded mb-3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-info-circle"></i> 检测信息
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>ID:</strong> <span id="detectionDetailId"></span></p>
+                                    <p><strong>用户:</strong> <span id="detectionDetailUser"></span></p>
+                                    <p><strong>时间:</strong> <span id="detectionDetailTime"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>缺陷数量:</strong> <span id="detectionDetailDefects"></span></p>
+                                    <p><strong>检测模型:</strong> <span id="detectionDetailModel"></span></p>
+                                    <p><strong>处理时间:</strong> <span id="detectionDetailProcessTime"></span> 秒</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="analyzeThisDetectionBtn">
+                        <i class="bi bi-robot"></i> AI分析
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 检查管理员权限
+        function checkAdminAuth() {
+            fetch('/profile', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login.html';
+                    return null;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) {
+                    document.getElementById('username').textContent = data.user.username;
+                    if (!data.user.is_admin) {
+                        // 不是管理员，重定向到首页
+                        window.location.href = '/';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.href = '/login.html';
+            });
+        }
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = '/login.html';
+                }
+            });
+        });
+
+        // 侧边栏切换
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const target = this.getAttribute('data-target');
+                if (!target) return;
+                
+                // 更新侧边栏激活状态
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 显示对应内容
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.style.display = 'none';
+                    section.classList.remove('active');
+                });
+                document.getElementById(target).style.display = 'block';
+                document.getElementById(target).classList.add('active');
+                
+                // 根据选择的部分加载相应数据
+                if (target === 'dashboard') {
+                    loadDashboardData();
+                } else if (target === 'users') {
+                    loadUsers();
+                } else if (target === 'detections') {
+                    loadDetections();
+                } else if (target === 'analysis') {
+                    loadAnalysis();
+                } else if (target === 'settings') {
+                    loadSettings();
+                }
+            });
+        });
+
+        // 加载仪表盘数据
+        function loadDashboardData() {
+            // 加载统计数据
+            fetch('/api/admin/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('userCount').textContent = data.user_count;
+                    document.getElementById('detectionCount').textContent = data.detection_count;
+                    document.getElementById('analysisCount').textContent = data.analysis_count;
+                    document.getElementById('defectCount').textContent = data.defect_count;
+                    
+                    // 绘制图表
+                    createDetectionsChart(data.daily_detections);
+                    createDefectTypesChart(data.defect_types);
+                    
+                    // 加载最近活动
+                    loadRecentActivity();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading dashboard data:', error);
+            });
+        }
+        
+        // 创建检测统计图表
+        function createDetectionsChart(data) {
+            const ctx = document.getElementById('detectionsChart').getContext('2d');
+            
+            // 提取日期和数量
+            const dates = data.map(item => item.date);
+            const counts = data.map(item => item.count);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: '检测次数',
+                        data: counts,
+                        backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 创建缺陷类型分布图表
+        function createDefectTypesChart(data) {
+            const ctx = document.getElementById('defectTypesChart').getContext('2d');
+            
+            // 提取类型和数量
+            const types = data.map(item => item.type);
+            const counts = data.map(item => item.count);
+            
+            // 生成随机颜色
+            const backgroundColors = types.map(() => {
+                const r = Math.floor(Math.random() * 200);
+                const g = Math.floor(Math.random() * 200);
+                const b = Math.floor(Math.random() * 200);
+                return `rgba(${r}, ${g}, ${b}, 0.7)`;
+            });
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: types,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 加载最近活动
+        function loadRecentActivity() {
+            const activityLoader = document.getElementById('recentActivityLoader');
+            const activityList = document.getElementById('recentActivityList');
+            const activityItems = document.getElementById('activityItems');
+            
+            activityLoader.style.display = 'block';
+            activityList.style.display = 'none';
+            
+            fetch('/api/admin/recent_activity')
+            .then(response => response.json())
+            .then(data => {
+                activityLoader.style.display = 'none';
+                activityList.style.display = 'block';
+                
+                if (data.status === 'success' && data.activities.length > 0) {
+                    const activitiesHtml = data.activities.map(activity => {
+                        const activityTime = new Date(activity.timestamp).toLocaleString();
+                        let icon, badge;
+                        
+                        if (activity.type === 'user_register') {
+                            icon = 'bi-person-plus';
+                            badge = 'bg-primary';
+                        } else if (activity.type === 'user_login') {
+                            icon = 'bi-box-arrow-in-right';
+                            badge = 'bg-info';
+                        } else if (activity.type === 'detection') {
+                            icon = 'bi-camera';
+                            badge = 'bg-success';
+                        } else if (activity.type === 'analysis') {
+                            icon = 'bi-robot';
+                            badge = 'bg-warning';
+                        } else {
+                            icon = 'bi-activity';
+                            badge = 'bg-secondary';
+                        }
+                        
+                        return `
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">${activity.description}</div>
+                                    <small class="text-muted">${activityTime}</small>
+                                </div>
+                                <span class="badge ${badge} rounded-pill">
+                                    <i class="bi ${icon}"></i>
+                                </span>
+                            </li>
+                        `;
+                    }).join('');
+                    
+                    activityItems.innerHTML = activitiesHtml;
+                } else {
+                    activityItems.innerHTML = '<li class="list-group-item text-center text-muted">暂无活动记录</li>';
+                }
+            })
+            .catch(error => {
+                activityLoader.style.display = 'none';
+                activityItems.innerHTML = '<li class="list-group-item text-danger">加载失败: ' + error + '</li>';
+            });
+        }
+
+        // 刷新仪表盘数据
+        function refreshDashboard() {
+            loadDashboardData();
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            loadDashboardData();
+        });
+
+        // 以下函数将在后续实现
+        function loadUsers() {
+            // 加载用户列表
+            const usersLoader = document.getElementById('usersLoader');
+            const usersTable = document.getElementById('usersTable');
+            const usersList = document.getElementById('usersList');
+            
+            usersLoader.style.display = 'block';
+            usersTable.style.display = 'none';
+            
+            fetch('/api/admin/users')
+            .then(response => response.json())
+            .then(data => {
+                usersLoader.style.display = 'none';
+                usersTable.style.display = 'block';
+                
+                if (data.status === 'success' && data.users.length > 0) {
+                    const usersHtml = data.users.map(user => {
+                        const registerDate = new Date(user.register_date).toLocaleString();
+                        const roleBadge = user.is_admin ? 
+                            '<span class="badge bg-danger badge-role">管理员</span>' : 
+                            '<span class="badge bg-success badge-role">普通用户</span>';
+                        const statusBadge = user.is_active ? 
+                            '<span class="badge bg-success">已激活</span>' : 
+                            '<span class="badge bg-secondary">未激活</span>';
+                        
+                        return `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.email}</td>
+                                <td>${roleBadge}</td>
+                                <td>${statusBadge}</td>
+                                <td>${registerDate}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    usersList.innerHTML = usersHtml;
+                    generateUsersPagination(data.page, data.total_pages);
+                } else {
+                    usersList.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">暂无用户数据</td></tr>';
+                    document.getElementById('usersPagination').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                usersLoader.style.display = 'none';
+                usersList.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">加载失败: ${error}</td></tr>`;
+            });
+        }
+        
+        // 生成用户分页
+        function generateUsersPagination(currentPage, totalPages) {
+            const pagination = document.getElementById('usersPagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadUsersPage(${currentPage - 1}); return false;">上一页</a>
+                </li>
+            `;
+            
+            // 生成页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="loadUsersPage(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+            
+            paginationHtml += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadUsersPage(${currentPage + 1}); return false;">下一页</a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHtml;
+        }
+        
+        // 加载特定页码的用户
+        function loadUsersPage(page) {
+            const usersLoader = document.getElementById('usersLoader');
+            const usersTable = document.getElementById('usersTable');
+            const usersList = document.getElementById('usersList');
+            
+            usersLoader.style.display = 'block';
+            usersTable.style.display = 'none';
+            
+            fetch(`/api/admin/users?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                usersLoader.style.display = 'none';
+                usersTable.style.display = 'block';
+                
+                if (data.status === 'success' && data.users.length > 0) {
+                    const usersHtml = data.users.map(user => {
+                        const registerDate = new Date(user.register_date).toLocaleString();
+                        const roleBadge = user.is_admin ? 
+                            '<span class="badge bg-danger badge-role">管理员</span>' : 
+                            '<span class="badge bg-success badge-role">普通用户</span>';
+                        const statusBadge = user.is_active ? 
+                            '<span class="badge bg-success">已激活</span>' : 
+                            '<span class="badge bg-secondary">未激活</span>';
+                        
+                        return `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.email}</td>
+                                <td>${roleBadge}</td>
+                                <td>${statusBadge}</td>
+                                <td>${registerDate}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    usersList.innerHTML = usersHtml;
+                    generateUsersPagination(data.page, data.total_pages);
+                } else {
+                    usersList.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">暂无用户数据</td></tr>';
+                    document.getElementById('usersPagination').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                usersLoader.style.display = 'none';
+                usersList.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">加载失败: ${error}</td></tr>`;
+            });
+        }
+        
+        // 搜索用户
+        document.getElementById('userSearchInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim();
+                
+                if (searchTerm) {
+                    searchUsers(searchTerm);
+                } else {
+                    loadUsers();
+                }
+            }
+        });
+        
+        function searchUsers(term) {
+            const usersLoader = document.getElementById('usersLoader');
+            const usersTable = document.getElementById('usersTable');
+            const usersList = document.getElementById('usersList');
+            
+            usersLoader.style.display = 'block';
+            usersTable.style.display = 'none';
+            
+            fetch(`/api/admin/users/search?term=${encodeURIComponent(term)}`)
+            .then(response => response.json())
+            .then(data => {
+                usersLoader.style.display = 'none';
+                usersTable.style.display = 'block';
+                
+                if (data.status === 'success' && data.users.length > 0) {
+                    const usersHtml = data.users.map(user => {
+                        const registerDate = new Date(user.register_date).toLocaleString();
+                        const roleBadge = user.is_admin ? 
+                            '<span class="badge bg-danger badge-role">管理员</span>' : 
+                            '<span class="badge bg-success badge-role">普通用户</span>';
+                        const statusBadge = user.is_active ? 
+                            '<span class="badge bg-success">已激活</span>' : 
+                            '<span class="badge bg-secondary">未激活</span>';
+                        
+                        return `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.email}</td>
+                                <td>${roleBadge}</td>
+                                <td>${statusBadge}</td>
+                                <td>${registerDate}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    usersList.innerHTML = usersHtml;
+                    document.getElementById('usersPagination').innerHTML = ''; // 搜索结果不分页
+                } else {
+                    usersList.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">未找到匹配的用户</td></tr>';
+                    document.getElementById('usersPagination').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                usersLoader.style.display = 'none';
+                usersList.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">搜索失败: ${error}</td></tr>`;
+            });
+        }
+        
+        // 添加用户
+        document.getElementById('submitAddUser').addEventListener('click', function() {
+            const username = document.getElementById('newUsername').value;
+            const email = document.getElementById('newEmail').value;
+            const password = document.getElementById('newPassword').value;
+            const isAdmin = document.getElementById('newIsAdmin').checked;
+            
+            if (!username || !email || !password) {
+                alert('请填写所有必填字段');
+                return;
+            }
+            
+            // 发送添加用户请求
+            fetch('/api/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    is_admin: isAdmin
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 关闭模态框并刷新用户列表
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                    modal.hide();
+                    
+                    // 清空表单
+                    document.getElementById('addUserForm').reset();
+                    
+                    // 刷新用户列表
+                    loadUsers();
+                } else {
+                    alert('添加用户失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        // 编辑用户
+        function editUser(userId) {
+            // 获取用户信息
+            fetch(`/api/admin/users/${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 填充表单
+                    document.getElementById('editUserId').value = data.user.id;
+                    document.getElementById('editUsername').value = data.user.username;
+                    document.getElementById('editEmail').value = data.user.email;
+                    document.getElementById('editPassword').value = '';
+                    document.getElementById('editIsAdmin').checked = data.user.is_admin;
+                    document.getElementById('editIsActive').checked = data.user.is_active;
+                    
+                    // 显示模态框
+                    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                    modal.show();
+                } else {
+                    alert('获取用户信息失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        }
+        
+        // 提交编辑用户
+        document.getElementById('submitEditUser').addEventListener('click', function() {
+            const userId = document.getElementById('editUserId').value;
+            const username = document.getElementById('editUsername').value;
+            const email = document.getElementById('editEmail').value;
+            const password = document.getElementById('editPassword').value;
+            const isAdmin = document.getElementById('editIsAdmin').checked;
+            const isActive = document.getElementById('editIsActive').checked;
+            
+            if (!username || !email) {
+                alert('请填写所有必填字段');
+                return;
+            }
+            
+            // 构建请求数据
+            const userData = {
+                username: username,
+                email: email,
+                is_admin: isAdmin,
+                is_active: isActive
+            };
+            
+            // 如果密码有值，则加入请求
+            if (password) {
+                userData.password = password;
+            }
+            
+            // 发送更新用户请求
+            fetch(`/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 关闭模态框并刷新用户列表
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    modal.hide();
+                    
+                    // 刷新用户列表
+                    loadUsers();
+                } else {
+                    alert('更新用户失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        // 删除用户
+        function deleteUser(userId) {
+            document.getElementById('deleteUserId').value = userId;
+            const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            modal.show();
+        }
+        
+        // 确认删除用户
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            const userId = document.getElementById('deleteUserId').value;
+            
+            fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 关闭模态框并刷新用户列表
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal'));
+                    modal.hide();
+                    
+                    // 刷新用户列表
+                    loadUsers();
+                } else {
+                    alert('删除用户失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+
+        // 加载检测记录
+        function loadDetections(page = 1) {
+            const detectionsLoader = document.getElementById('detectionsLoader');
+            const detectionsTable = document.getElementById('detectionsTable');
+            const detectionsList = document.getElementById('detectionsList');
+            
+            detectionsLoader.style.display = 'block';
+            detectionsTable.style.display = 'none';
+            
+            // 获取日期过滤
+            const startDate = document.getElementById('detectionsStartDate').value;
+            const endDate = document.getElementById('detectionsEndDate').value;
+            
+            let url = `/api/admin/detections?page=${page}`;
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
+            
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                detectionsLoader.style.display = 'none';
+                detectionsTable.style.display = 'block';
+                
+                if (data.status === 'success' && data.detections.length > 0) {
+                    const detectionsHtml = data.detections.map(detection => {
+                        const detectionDate = new Date(detection.timestamp).toLocaleString();
+                        const defectCount = detection.num_defects;
+                        const defectBadge = defectCount > 0 ? 
+                            `<span class="badge bg-danger">${defectCount}</span>` : 
+                            '<span class="badge bg-success">0</span>';
+                        
+                        return `
+                            <tr>
+                                <td>${detection.id}</td>
+                                <td>${detection.username}</td>
+                                <td>${detectionDate}</td>
+                                <td>
+                                    <img src="${detection.image_path}" alt="原图" class="img-thumbnail" style="height: 50px;">
+                                </td>
+                                <td>
+                                    <img src="${detection.result_path}" alt="结果" class="img-thumbnail" style="height: 50px;">
+                                </td>
+                                <td class="text-center">${defectBadge}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewDetection(${detection.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    detectionsList.innerHTML = detectionsHtml;
+                    generateDetectionsPagination(data.page, data.total_pages);
+                } else {
+                    detectionsList.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">暂无检测记录</td></tr>';
+                    document.getElementById('detectionsPagination').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                detectionsLoader.style.display = 'none';
+                detectionsList.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">加载失败: ${error}</td></tr>`;
+            });
+        }
+        
+        // 生成检测记录分页
+        function generateDetectionsPagination(currentPage, totalPages) {
+            const pagination = document.getElementById('detectionsPagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadDetections(${currentPage - 1}); return false;">上一页</a>
+                </li>
+            `;
+            
+            // 生成页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="loadDetections(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+            
+            paginationHtml += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadDetections(${currentPage + 1}); return false;">下一页</a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHtml;
+        }
+        
+        // 搜索检测记录
+        document.getElementById('detectionSearchInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim();
+                
+                if (searchTerm) {
+                    searchDetections(searchTerm);
+                } else {
+                    loadDetections();
+                }
+            }
+        });
+        
+        function searchDetections(term) {
+            const detectionsLoader = document.getElementById('detectionsLoader');
+            const detectionsTable = document.getElementById('detectionsTable');
+            const detectionsList = document.getElementById('detectionsList');
+            
+            detectionsLoader.style.display = 'block';
+            detectionsTable.style.display = 'none';
+            
+            fetch(`/api/admin/detections/search?term=${encodeURIComponent(term)}`)
+            .then(response => response.json())
+            .then(data => {
+                detectionsLoader.style.display = 'none';
+                detectionsTable.style.display = 'block';
+                
+                if (data.status === 'success' && data.detections.length > 0) {
+                    const detectionsHtml = data.detections.map(detection => {
+                        const detectionDate = new Date(detection.timestamp).toLocaleString();
+                        const defectCount = detection.num_defects;
+                        const defectBadge = defectCount > 0 ? 
+                            `<span class="badge bg-danger">${defectCount}</span>` : 
+                            '<span class="badge bg-success">0</span>';
+                        
+                        return `
+                            <tr>
+                                <td>${detection.id}</td>
+                                <td>${detection.username}</td>
+                                <td>${detectionDate}</td>
+                                <td>
+                                    <img src="${detection.image_path}" alt="原图" class="img-thumbnail" style="height: 50px;">
+                                </td>
+                                <td>
+                                    <img src="${detection.result_path}" alt="结果" class="img-thumbnail" style="height: 50px;">
+                                </td>
+                                <td class="text-center">${defectBadge}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewDetection(${detection.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    detectionsList.innerHTML = detectionsHtml;
+                    document.getElementById('detectionsPagination').innerHTML = '';
+                } else {
+                    detectionsList.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">未找到匹配的检测记录</td></tr>';
+                    document.getElementById('detectionsPagination').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                detectionsLoader.style.display = 'none';
+                detectionsList.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-3">搜索失败: ${error}</td></tr>`;
+            });
+        }
+        
+        // 查看检测详情
+        function viewDetection(detectionId) {
+            fetch(`/api/admin/detections/${detectionId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const detection = data.detection;
+                    
+                    // 填充模态框
+                    document.getElementById('detectionDetailId').textContent = detection.id;
+                    document.getElementById('detectionDetailUser').textContent = detection.username;
+                    document.getElementById('detectionDetailTime').textContent = new Date(detection.timestamp).toLocaleString();
+                    document.getElementById('detectionDetailDefects').textContent = detection.num_defects;
+                    document.getElementById('detectionDetailModel').textContent = detection.model || '默认模型';
+                    document.getElementById('detectionDetailProcessTime').textContent = detection.process_time || '-';
+                    
+                    document.getElementById('detectionOriginalImage').src = detection.image_path;
+                    document.getElementById('detectionResultImage').src = detection.result_path;
+                    
+                    // 设置AI分析按钮的操作
+                    document.getElementById('analyzeThisDetectionBtn').onclick = function() {
+                        analyzeDetection(detection.id);
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('viewDetectionModal'));
+                        modal.hide();
+                    };
+                    
+                    // 显示模态框
+                    const modal = new bootstrap.Modal(document.getElementById('viewDetectionModal'));
+                    modal.show();
+                } else {
+                    alert('获取检测详情失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        }
+        
+        // 执行AI分析
+        function analyzeDetection(detectionId) {
+            fetch(`/api/analyze_detection/${detectionId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('分析已完成，请在分析记录中查看结果');
+                    
+                    // 如果当前在分析记录页面，刷新数据
+                    if (document.getElementById('analysis').classList.contains('active')) {
+                        loadAnalysis();
+                    }
+                } else {
+                    alert('分析失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        }
+        
+        // 日期筛选
+        document.getElementById('filterDetectionsBtn').addEventListener('click', function() {
+            loadDetections(1); // 重新加载第一页
+        });
+
+        function loadAnalysis(page = 1) {
+            // 加载所有分析记录
+            const analysisLoader = document.getElementById('analysisLoader');
+            const analysisTable = document.getElementById('analysisTable');
+            const analysisList = document.getElementById('analysisList');
+            
+            analysisLoader.style.display = 'block';
+            analysisTable.style.display = 'none';
+            
+            // 获取日期过滤
+            const startDate = document.getElementById('analysisStartDate').value;
+            const endDate = document.getElementById('analysisEndDate').value;
+            
+            let url = `/api/admin/analysis?page=${page}`;
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
+            
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                analysisLoader.style.display = 'none';
+                analysisTable.style.display = 'block';
+                
+                if (data.status === 'success' && data.analyses.length > 0) {
+                    const analysesHtml = data.analyses.map(analysis => {
+                        const analysisDate = new Date(analysis.timestamp).toLocaleString();
+                        const detectionLink = analysis.detection_id ? 
+                            `<a href="#" onclick="viewDetection(${analysis.detection_id}); return false;">#${analysis.detection_id}</a>` : 
+                            '无';
+                        
+                        return `
+                            <tr>
+                                <td>${analysis.id}</td>
+                                <td>${analysis.username}</td>
+                                <td>${analysisDate}</td>
+                                <td>
+                                    <img src="${analysis.image_path}" alt="分析图像" class="img-thumbnail" style="height: 50px;">
+                                </td>
+                                <td>${detectionLink}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewAnalysis(${analysis.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    analysisList.innerHTML = analysesHtml;
+                    generateAnalysisPagination(data.page, data.total_pages);
+                } else {
+                    analysisList.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">暂无分析记录</td></tr>';
+                    document.getElementById('analysisPagination').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                analysisLoader.style.display = 'none';
+                analysisList.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">加载失败: ${error}</td></tr>`;
+            });
+        }
+        
+        // 生成分析记录分页
+        function generateAnalysisPagination(currentPage, totalPages) {
+            const pagination = document.getElementById('analysisPagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadAnalysis(${currentPage - 1}); return false;">上一页</a>
+                </li>
+            `;
+            
+            // 生成页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="loadAnalysis(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+            
+            paginationHtml += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadAnalysis(${currentPage + 1}); return false;">下一页</a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHtml;
+        }
+        
+        // 搜索分析记录
+        document.getElementById('analysisSearchInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim();
+                
+                if (searchTerm) {
+                    searchAnalysis(searchTerm);
+                } else {
+                    loadAnalysis();
+                }
+            }
+        });
+        
+        function searchAnalysis(term) {
+            const analysisLoader = document.getElementById('analysisLoader');
+            const analysisTable = document.getElementById('analysisTable');
+            const analysisList = document.getElementById('analysisList');
+            
+            analysisLoader.style.display = 'block';
+            analysisTable.style.display = 'none';
+            
+            fetch(`/api/admin/analysis/search?term=${encodeURIComponent(term)}`)
+            .then(response => response.json())
+            .then(data => {
+                analysisLoader.style.display = 'none';
+                analysisTable.style.display = 'block';
+                
+                if (data.status === 'success' && data.analyses.length > 0) {
+                    const analysesHtml = data.analyses.map(analysis => {
+                        const analysisDate = new Date(analysis.timestamp).toLocaleString();
+                        const detectionLink = analysis.detection_id ? 
+                            `<a href="#" onclick="viewDetection(${analysis.detection_id}); return false;">#${analysis.detection_id}</a>` : 
+                            '无';
+                        
+                        return `
+                            <tr>
+                                <td>${analysis.id}</td>
+                                <td>${analysis.username}</td>
+                                <td>${analysisDate}</td>
+                                <td>
+                                    <img src="${analysis.image_path}" alt="分析图像" class="img-thumbnail" style="height: 50px;">
+                                </td>
+                                <td>${detectionLink}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewAnalysis(${analysis.id})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    analysisList.innerHTML = analysesHtml;
+                    document.getElementById('analysisPagination').innerHTML = '';
+                } else {
+                    analysisList.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">未找到匹配的分析记录</td></tr>';
+                    document.getElementById('analysisPagination').innerHTML = '';
+                }
+            })
+            .catch(error => {
+                analysisLoader.style.display = 'none';
+                analysisList.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">搜索失败: ${error}</td></tr>`;
+            });
+        }
+        
+        // 查看分析详情
+        function viewAnalysis(analysisId) {
+            fetch(`/api/admin/analysis/${analysisId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const analysis = data.analysis;
+                    
+                    // 填充模态框
+                    document.getElementById('analysisDetailId').textContent = analysis.id;
+                    document.getElementById('analysisDetailUser').textContent = analysis.username;
+                    document.getElementById('analysisDetailTime').textContent = new Date(analysis.timestamp).toLocaleString();
+                    document.getElementById('analysisDetailDetection').textContent = analysis.detection_id ? `#${analysis.detection_id}` : '无';
+                    document.getElementById('analysisImage').src = analysis.image_path;
+                    
+                    // 使用格式化函数显示分析内容
+                    const contentElement = document.getElementById('analysisDetailContent');
+                    formatAndDisplayAnalysis(analysis.analysis_text, contentElement);
+                    
+                    // 显示模态框
+                    const modal = new bootstrap.Modal(document.getElementById('viewAnalysisModal'));
+                    modal.show();
+                } else {
+                    alert('获取分析详情失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        }
+        
+        // 日期筛选
+        document.getElementById('filterAnalysisBtn').addEventListener('click', function() {
+            loadAnalysis(1); // 重新加载第一页
+        });
+        
+        // 格式化和显示分析结果（与ai-analysis.html中相同）
+        function formatAndDisplayAnalysis(analysisText, targetElement) {
+            // 初始化HTML内容
+            let formattedHtml = '<div class="analysis-formatted p-2">';
+            
+            // 处理标题
+            let sections = analysisText.split(/(\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:])/).filter(Boolean);
+            if (sections.length > 1) {
+                // 有结构化标题的情况
+                for (let i = 0; i < sections.length; i++) {
+                    const section = sections[i].trim();
+                    
+                    // 检查是否是标题
+                    if (/^\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:]$/.test(section)) {
+                        // 这是一个标题
+                        const titleNumber = section.match(/^\d+/)[0];
+                        const titleText = section.replace(/^\d+\.\s+/, '').replace(/[：:]$/, '');
+                        
+                        // 添加图标
+                        let icon = 'bi-info-circle';
+                        if (titleText.includes('严重') || titleText.includes('程度')) {
+                            icon = 'bi-exclamation-triangle';
+                        } else if (titleText.includes('原因')) {
+                            icon = 'bi-search';
+                        } else if (titleText.includes('建议') || titleText.includes('修复')) {
+                            icon = 'bi-tools';
+                        } else if (titleText.includes('预防')) {
+                            icon = 'bi-shield-check';
+                        }
+                        
+                        formattedHtml += `
+                            <div class="analysis-section mb-3">
+                                <h5 class="analysis-title">
+                                    <i class="bi ${icon} me-2"></i>${titleNumber}. ${titleText}
+                                </h5>
+                                <div class="analysis-content ps-4 pt-2">
+                        `;
+                    } else if (i > 0 && /^\d+\.\s+[\u4e00-\u9fa5a-zA-Z]+[：:]$/.test(sections[i-1])) {
+                        // 这是标题后的内容
+                        // 将文本中的要点标记为列表
+                        const contentWithList = section
+                            .replace(/([•·]\s+)/g, '<li>')
+                            .replace(/(\d+\)\s+)/g, '<li>')
+                            .replace(/(\([a-zA-Z]\)\s+)/g, '<li>')
+                            .split('\n')
+                            .map(line => {
+                                line = line.trim();
+                                if (line.startsWith('<li>')) {
+                                    return `${line}</li>`;
+                                }
+                                return line;
+                            })
+                            .join('\n');
+                        
+                        formattedHtml += `<div class="mb-2">${contentWithList}</div>`;
+                        formattedHtml += '</div></div>';
+                    }
+                }
+            } else {
+                // 无结构化标题的情况
+                formattedHtml += `<div class="analysis-general">${analysisText.replace(/\n/g, '<br>')}</div>`;
+            }
+            
+            formattedHtml += '</div>';
+            
+            // 设置HTML内容
+            targetElement.innerHTML = formattedHtml;
+        }
+
+        function loadSettings() {
+            // 加载系统设置
+            fetch('/api/admin/settings')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 填充检测设置
+                    document.getElementById('confidenceThreshold').value = data.settings.detection.confidence_threshold || 0.5;
+                    document.getElementById('confidenceValue').textContent = data.settings.detection.confidence_threshold || 0.5;
+                    document.getElementById('maxResults').value = data.settings.detection.max_results || 20;
+                    document.getElementById('autoAnalysis').checked = data.settings.detection.auto_analysis || false;
+                    
+                    // 填充API设置
+                    if (data.settings.api.deepseek_key) {
+                        document.getElementById('deepseekApiKey').value = '********';
+                    }
+                    document.getElementById('apiRequestTimeout').value = data.settings.api.timeout || 30;
+                    document.getElementById('enableRateLimiting').checked = data.settings.api.rate_limiting || true;
+                    
+                    // 填充邮件设置
+                    document.getElementById('smtpServer').value = data.settings.email.smtp_server || '';
+                    document.getElementById('smtpPort').value = data.settings.email.smtp_port || '';
+                    document.getElementById('smtpUsername').value = data.settings.email.smtp_username || '';
+                    document.getElementById('smtpPassword').value = data.settings.email.smtp_password ? '********' : '';
+                    document.getElementById('senderEmail').value = data.settings.email.sender_email || '';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading settings:', error);
+            });
+        }
+        
+        // 保存检测设置
+        document.getElementById('detectionSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const confidenceThreshold = parseFloat(document.getElementById('confidenceThreshold').value);
+            const maxResults = parseInt(document.getElementById('maxResults').value);
+            const autoAnalysis = document.getElementById('autoAnalysis').checked;
+            
+            fetch('/api/admin/settings/detection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    confidence_threshold: confidenceThreshold,
+                    max_results: maxResults,
+                    auto_analysis: autoAnalysis
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('检测设置已保存');
+                } else {
+                    alert('保存检测设置失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        // 保存API设置
+        document.getElementById('apiSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const deepseekApiKey = document.getElementById('deepseekApiKey').value;
+            const apiRequestTimeout = parseInt(document.getElementById('apiRequestTimeout').value);
+            const enableRateLimiting = document.getElementById('enableRateLimiting').checked;
+            
+            // 仅当API密钥不是占位符时才发送
+            const apiData = {
+                timeout: apiRequestTimeout,
+                rate_limiting: enableRateLimiting
+            };
+            
+            if (deepseekApiKey && deepseekApiKey !== '********') {
+                apiData.deepseek_key = deepseekApiKey;
+            }
+            
+            fetch('/api/admin/settings/api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(apiData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('API设置已保存');
+                } else {
+                    alert('保存API设置失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        // 保存邮件设置
+        document.getElementById('emailSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const smtpServer = document.getElementById('smtpServer').value;
+            const smtpPort = document.getElementById('smtpPort').value;
+            const smtpUsername = document.getElementById('smtpUsername').value;
+            const smtpPassword = document.getElementById('smtpPassword').value;
+            const senderEmail = document.getElementById('senderEmail').value;
+            
+            // 构建请求数据
+            const emailData = {
+                smtp_server: smtpServer,
+                smtp_port: smtpPort,
+                smtp_username: smtpUsername,
+                sender_email: senderEmail
+            };
+            
+            // 仅当密码不是占位符时才发送
+            if (smtpPassword && smtpPassword !== '********') {
+                emailData.smtp_password = smtpPassword;
+            }
+            
+            fetch('/api/admin/settings/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(emailData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('邮件设置已保存');
+                } else {
+                    alert('保存邮件设置失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        // 发送测试邮件
+        document.getElementById('testEmailBtn').addEventListener('click', function() {
+            fetch('/api/admin/settings/email/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('测试邮件已发送');
+                } else {
+                    alert('发送测试邮件失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        // 数据库操作
+        document.getElementById('backupDbBtn').addEventListener('click', function() {
+            fetch('/api/admin/database/backup', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('数据库备份已完成: ' + data.backup_path);
+                } else {
+                    alert('数据库备份失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        document.getElementById('optimizeDbBtn').addEventListener('click', function() {
+            fetch('/api/admin/database/optimize', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('数据库优化已完成');
+                } else {
+                    alert('数据库优化失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('请求错误: ' + error);
+            });
+        });
+        
+        document.getElementById('clearDetectionsBtn').addEventListener('click', function() {
+            if (confirm('确定要清除所有检测记录吗？此操作不可撤销！')) {
+                fetch('/api/admin/database/clear_detections', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('检测记录已清除');
+                        loadDashboardData(); // 刷新仪表盘
+                    } else {
+                        alert('清除检测记录失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('请求错误: ' + error);
+                });
+            }
+        });
+        
+        document.getElementById('clearAnalysisBtn').addEventListener('click', function() {
+            if (confirm('确定要清除所有分析记录吗？此操作不可撤销！')) {
+                fetch('/api/admin/database/clear_analysis', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('分析记录已清除');
+                        loadDashboardData(); // 刷新仪表盘
+                    } else {
+                        alert('清除分析记录失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('请求错误: ' + error);
+                });
+            }
+        });
+        
+        // 切换API密钥显示
+        document.getElementById('toggleApiKey').addEventListener('click', function() {
+            const apiKeyInput = document.getElementById('deepseekApiKey');
+            const icon = this.querySelector('i');
+            
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                apiKeyInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    </script>
+</body>
+</html> 

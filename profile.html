@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料 - 工业产品缺陷检测系统</title>
+    
+    <!-- CSS 框架 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* 工业大屏风格 */
+        :root {
+            --primary-color: #00d4ff;
+            --secondary-color: #0099cc;
+            --success-color: #00ff88;
+            --warning-color: #ffaa00;
+            --danger-color: #ff4444;
+            --dark-bg: #0a0f1b;
+            --card-bg: #162133;
+            --border-color: #2a3f5f;
+            --text-primary: #ffffff;
+            --text-secondary: #8892a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .top-header {
+            background: linear-gradient(135deg, #1a2332 0%, #0f1823 100%);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .system-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        /* 主要内容区域 */
+        .main-container {
+            padding: 40px 0;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* 数据卡片 */
+        .data-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .card-header-custom {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* 表单样式 */
+        .form-control {
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .form-control:focus {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.25rem rgba(0, 212, 255, 0.25);
+        }
+
+        .form-label {
+            color: var(--text-primary);
+        }
+
+        /* 按钮样式 */
+        .btn-industrial {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-industrial:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-danger-industrial {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #cc0000 100%);
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+        }
+
+        /* 用户信息卡片 */
+        .user-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-info-label {
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+
+        .user-info-value {
+            color: var(--text-primary);
+        }
+
+        /* 历史记录项 */
+        .history-item {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .history-date {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .defect-count {
+            background-color: var(--primary-color);
+            color: var(--dark-bg);
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+            max-width: 500px;
+            background: var(--card-bg);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transform: translateX(110%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            border-left-color: var(--danger-color);
+        }
+
+        .notification.success {
+            border-left-color: var(--success-color);
+        }
+
+        /* 分页控件 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination .page-item .page-link {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--dark-bg);
+        }
+
+        .pagination .page-item .page-link:hover {
+            background-color: var(--secondary-color);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="top-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="system-title">
+                        <i class="fas fa-industry"></i> 工业产品缺陷检测系统
+                    </h1>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="/" class="btn btn-sm btn-industrial me-2">
+                        <i class="fas fa-home"></i> 主页
+                    </a>
+                    <span class="me-3" id="user-display">
+                        <i class="fas fa-user-circle"></i> 
+                        <span id="username">用户名</span>
+                    </span>
+                    <button id="logout-btn" class="btn btn-sm btn-danger-industrial">
+                        <i class="fas fa-sign-out-alt"></i> 退出
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要内容 -->
+    <div class="main-container">
+        <div class="container">
+            <div class="row">
+                <!-- 左侧个人信息 -->
+                <div class="col-lg-4">
+                    <!-- 用户信息卡片 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-id-card"></i> 个人信息
+                        </div>
+                        <div id="user-info">
+                            <div class="user-info-item">
+                                <div class="user-info-label">用户名</div>
+                                <div class="user-info-value" id="info-username">loading...</div>
+                            </div>
+                            <div class="user-info-item">
+                                <div class="user-info-label">电子邮箱</div>
+                                <div class="user-info-value" id="info-email">loading...</div>
+                            </div>
+                            <div class="user-info-item">
+                                <div class="user-info-label">账号类型</div>
+                                <div class="user-info-value" id="info-role">loading...</div>
+                            </div>
+                            <div class="user-info-item">
+                                <div class="user-info-label">注册时间</div>
+                                <div class="user-info-value" id="info-created">loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 修改密码卡片 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-key"></i> 修改密码
+                        </div>
+                        <form id="password-form">
+                            <div class="mb-3">
+                                <label for="current-password" class="form-label">当前密码</label>
+                                <input type="password" class="form-control" id="current-password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="new-password" class="form-label">新密码</label>
+                                <input type="password" class="form-control" id="new-password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm-password" class="form-label">确认新密码</label>
+                                <input type="password" class="form-control" id="confirm-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-industrial">
+                                <i class="fas fa-save"></i> 保存更改
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 右侧检测历史 -->
+                <div class="col-lg-8">
+                    <!-- 检测历史卡片 -->
+                    <div class="data-card">
+                        <div class="card-header-custom">
+                            <i class="fas fa-history"></i> 检测历史
+                        </div>
+                        
+                        <div id="detection-history">
+                            <!-- 历史记录项将通过JavaScript动态添加 -->
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-secondary">正在加载检测历史...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 分页控件 -->
+                        <nav>
+                            <ul class="pagination" id="pagination">
+                                <!-- 分页控件将通过JavaScript动态添加 -->
+                            </ul>
+                        </nav>
+                        
+                        <div class="text-center mt-3">
+                            <a href="/api/export_data" class="btn btn-industrial">
+                                <i class="fas fa-file-export"></i> 导出数据
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">
+        <div id="notification-content"></div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const notification = document.getElementById('notification');
+            const notificationContent = document.getElementById('notification-content');
+            const passwordForm = document.getElementById('password-form');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            let currentPage = 1;
+            let totalPages = 1;
+            
+            // 显示通知
+            function showNotification(message, type = 'info') {
+                notificationContent.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 5000);
+            }
+            
+            // 获取用户信息
+            async function loadUserInfo() {
+                try {
+                    const response = await fetch('/profile', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        const user = data.user;
+                        
+                        // 填充用户信息
+                        document.getElementById('username').textContent = user.username;
+                        document.getElementById('info-username').textContent = user.username;
+                        document.getElementById('info-email').textContent = user.email;
+                        document.getElementById('info-role').textContent = user.is_admin ? '管理员' : '普通用户';
+                        
+                        // 格式化日期
+                        const createdDate = new Date(user.created_at);
+                        document.getElementById('info-created').textContent = createdDate.toLocaleString('zh-CN');
+                    } else {
+                        showNotification('无法加载用户信息: ' + data.message, 'error');
+                    }
+                } catch (error) {
+                    showNotification('加载用户信息失败', 'error');
+                    console.error(error);
+                }
+            }
+            
+            // 加载检测历史
+            async function loadDetectionHistory(page = 1) {
+                try {
+                    const response = await fetch(`/api/user_detections?page=${page}&per_page=5`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        const historyContainer = document.getElementById('detection-history');
+                        historyContainer.innerHTML = '';
+                        
+                        if (data.detections.length === 0) {
+                            historyContainer.innerHTML = '<p class="text-center text-secondary py-4">暂无检测历史</p>';
+                            return;
+                        }
+                        
+                        // 显示检测历史
+                        data.detections.forEach(detection => {
+                            const date = new Date(detection.timestamp);
+                            const formattedDate = date.toLocaleString('zh-CN');
+                            
+                            const historyItem = document.createElement('div');
+                            historyItem.className = 'history-item';
+                            historyItem.innerHTML = `
+                                <div class="history-header">
+                                    <div class="history-date">
+                                        <i class="fas fa-calendar-alt"></i> ${formattedDate}
+                                    </div>
+                                    <div class="defect-count">
+                                        检测到 ${detection.num_defects} 个缺陷
+                                    </div>
+                                </div>
+                                <div class="history-content">
+                                    ${detection.image_path ? `
+                                        <div class="text-center mb-2">
+                                            <a href="${detection.result_path}" target="_blank">
+                                                <img src="${detection.result_path}" class="img-fluid rounded" style="max-height: 200px;">
+                                            </a>
+                                        </div>
+                                    ` : ''}
+                                    <div class="defect-details">
+                                        ${detection.details && detection.details.length > 0 ? 
+                                            detection.details.map(defect => `
+                                                <span class="badge bg-primary me-2 mb-2">
+                                                    ${defect.class_name}: ${(defect.confidence * 100).toFixed(1)}%
+                                                </span>
+                                            `).join('') : 
+                                            '<p class="text-secondary">无详细信息</p>'
+                                        }
+                                    </div>
+                                </div>
+                            `;
+                            
+                            historyContainer.appendChild(historyItem);
+                        });
+                        
+                        // 更新分页
+                        currentPage = data.page;
+                        totalPages = data.pages;
+                        updatePagination();
+                    } else {
+                        showNotification('无法加载检测历史: ' + data.message, 'error');
+                    }
+                } catch (error) {
+                    showNotification('加载检测历史失败', 'error');
+                    console.error(error);
+                }
+            }
+            
+            // 更新分页控件
+            function updatePagination() {
+                const pagination = document.getElementById('pagination');
+                pagination.innerHTML = '';
+                
+                // 上一页
+                const prevItem = document.createElement('li');
+                prevItem.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                prevItem.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">上一页</a>`;
+                pagination.appendChild(prevItem);
+                
+                // 页码
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageItem = document.createElement('li');
+                    pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    pageItem.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    pagination.appendChild(pageItem);
+                }
+                
+                // 下一页
+                const nextItem = document.createElement('li');
+                nextItem.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                nextItem.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">下一页</a>`;
+                pagination.appendChild(nextItem);
+                
+                // 添加事件监听器
+                document.querySelectorAll('.page-link').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const page = parseInt(this.getAttribute('data-page'));
+                        if (!isNaN(page) && page > 0 && page <= totalPages) {
+                            loadDetectionHistory(page);
+                        }
+                    });
+                });
+            }
+            
+            // 修改密码
+            passwordForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const currentPassword = document.getElementById('current-password').value;
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                if (newPassword !== confirmPassword) {
+                    showNotification('两次输入的新密码不匹配', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/profile', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            current_password: currentPassword,
+                            password: newPassword
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        showNotification('密码修改成功', 'success');
+                        passwordForm.reset();
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                } catch (error) {
+                    showNotification('密码修改失败', 'error');
+                    console.error(error);
+                }
+            });
+            
+            // 退出登录
+            logoutBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        window.location.href = '/login';
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                } catch (error) {
+                    showNotification('退出失败', 'error');
+                    console.error(error);
+                }
+            });
+            
+            // 初始化加载
+            loadUserInfo();
+            loadDetectionHistory();
+        });
+    </script>
+</body>
+</html> 
